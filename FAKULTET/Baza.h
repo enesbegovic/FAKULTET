@@ -17,4 +17,6 @@ public:
 	void PrikaziPredmeteSaOdredjeneGodine(int GKPP);
 	void DodajPrijavu(string Student, string Predmet, string DatumPrijave);
 	void PrikaziPrijaveZaOdredjenuGodinu(int godina);
+	void KreirajIspit(string Student, string Predmet, string DatumPrijave, string DatumPolaganja, bool Polozio, int Ocjena);
+	void PrikaziIspiteZaOdredjenuGodinu(int godina);
 };

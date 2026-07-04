@@ -187,3 +187,54 @@ void Baza::PrikaziPrijaveZaOdredjenuGodinu(int godina) {
 			return 0;
 		}, nullptr, nullptr);
 }
+void Baza::KreirajIspit(string Student, string Predmet, string DatumPrijave, string DatumPolaganja, bool Polozio, int Ocjena) {
+	char* errMsg = nullptr;
+	int StudentId = 0;
+	string ProvjeraStudenta =
+		"SELECT ID FROM Studenti WHERE Index='" + Student + "';";
+	sqlite3_exec(db, ProvjeraStudenta.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &StudentId, nullptr);
+	int PredmetId = 0;
+	string ProvjeraPredmeta =
+		"SELECT ID FROM Predmeti WHERE Naziv='" + Predmet + "';";
+	sqlite3_exec(db, ProvjeraPredmeta.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &PredmetId, nullptr);
+	int PrijaveId = 0;
+	string ProvjeraPrijave =
+		"SELECT ID FROM Prijave WHERE DatumPrijave='" + DatumPrijave + "';";
+	sqlite3_exec(db, ProvjeraPrijave.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &PrijaveId, nullptr);
+	if (StudentId == 0 || PredmetId == 0 || PrijaveId == 0) {
+		cout << "GRESKA PRI DODAVANJU ISPITA!!!" << endl;
+		return;
+	}
+	string sql =
+		"INSERT INTO Ispiti(StudentID,PredmetID,DatumPrijaveID,DatumPolaganja,Polozio,Ocjena) VALUES('"
+		+ to_string(StudentId) + "', '" + to_string(PredmetId) + "', '" + to_string(PrijaveId) + "', '" + DatumPolaganja + "', '" + to_string(Polozio)+ "', '" + to_string(Ocjena) + "');";
+	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+}
+void Baza::PrikaziIspiteZaOdredjenuGodinu(int godina) {
+	string sql =
+		"SELECT Studenti.PrezimeIme,Studenti.Index,Predmeti.Naziv,Predmeti.PredmetniProfesor,Predmeti.ECTSBodovi,Prijave.DatumPrijave "
+		"FROM Ispiti "
+		"JOIN Studenti ON Ispiti.StudentID=Studenti.ID "
+		"JOIN Predmeti ON Ispiti.PredmetID=Predmeti.ID "
+		"JOIN Prijave ON Ispiti.DatumPrijaveID=Prijave.ID "
+		"WHERE Studenti.GodinaStudija=" + to_string(godina) + ";";
+	sqlite3_exec(db, sql.c_str(),
+		[](void*, int kolone, char** podaci, char** nazivKolone) {
+			for (int i = 0; i < kolone; i++)
+				cout << nazivKolone[i] << ": " << (podaci[i] ? podaci[i] : "NULL") << endl;
+			cout << "---" << endl;
+			return 0;
+		}, nullptr, nullptr);
+}
