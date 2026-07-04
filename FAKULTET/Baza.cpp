@@ -145,3 +145,45 @@ void Baza::PrikaziPredmeteSaOdredjeneGodine(int GKPP) {
 
 		}, nullptr, nullptr);
 }
+void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave) {
+	char* errMsg = nullptr;
+	int StudentID = 0;
+	string ProvjeraStudenta =
+		"SELECT ID FROM Studenti WHERE Index='" + Student + "';";
+	sqlite3_exec(db, ProvjeraStudenta.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &StudentID, nullptr);
+	int PredmetID = 0;
+	string ProvjeraPredmeta =
+		"SELECT ID FROM Predmeti WHERE Naziv='" + Predmet + "';";
+	sqlite3_exec(db, ProvjeraPredmeta.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &PredmetID, nullptr);
+	if (StudentID == 0 || PredmetID == 0) {
+		cout << "GRESKA PRI PRIJAVLJIVANJU ISPITA!!!" << endl;
+		return;
+	}
+	string sql =
+		"INSERT INTO Prijave(StudentID,PredmetID,DatumPrijave) VALUES('"
+		+ to_string(StudentID) + "', '" + to_string(PredmetID) + "', '" + DatumPrijave + "');";
+	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+}
+void Baza::PrikaziPrijaveZaOdredjenuGodinu(int godina) {
+	string sql =
+		"SELECT Studenti.PrezimeIme, Studenti.Index, Studenti.GodinaStudija, Predmeti.Naziv, Predmeti.PredmetniProfesor, Predmeti.ECTSBodovi "
+		"FROM Prijave "
+		"JOIN Studenti ON Prijave.StudentID=Studenti.ID "
+		"JOIN Predmeti ON Prijave.PredmetID=Predmeti.ID "
+		"WHERE Studenti.GodinaStudija=" + to_string(godina) + ";";
+	sqlite3_exec(db, sql.c_str(),
+		[](void*, int kolone, char** podaci, char** nazivKolone) {
+			for (int i = 0; i < kolone; i++)
+				cout << nazivKolone[i] << ": " << podaci[i] << endl;
+			cout << "---" << endl;
+			return 0;
+		}, nullptr, nullptr);
+}
