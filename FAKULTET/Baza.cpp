@@ -96,3 +96,52 @@ void Baza::PrikaziStudenteSaOdredjeneGodine(int GKP) {
 
 		}, nullptr, nullptr);
 }
+void Baza::KreirajPredmet(string Naziv, string PredmetniProfesor, int ECTS, int GKPP) {
+	char* errMsg = nullptr;
+	int count = 0;
+	string Provjera =
+		"SELECT COUNT(*) FROM Predmeti WHERE Naziv='" + Naziv + "';";
+	sqlite3_exec(db, Provjera.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &count, nullptr);
+	if (count > 0) {
+		cout << "PREDMET VEC POSTOJI!!!" << endl;
+		return;
+	}
+	string sql =
+		"INSERT INTO Predmetiti(Naziv,PredmetiProfesor,ECTSBodovi,GodinaKojojPredmetPripada) VALUES('"
+		+ Naziv + "', '" + PredmetniProfesor + "', '" + to_string(ECTS) + "', '" + to_string(GKPP) + "');";
+	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+}
+void Baza::UkloniPredmet(string Naziv) {
+	char* errMsg = nullptr;
+	int count = 0;
+	string Provjera =
+		"SELECT COUNT(*) FROM Predmeti WHERE Naziv='" + Naziv + "';";
+	sqlite3_exec(db, Provjera.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &count, nullptr);
+	if (count == 0) {
+		cout << "NE POSTOJI TRAZENI PREDMET!!!" << endl;
+		return;
+	}
+	string sql =
+		"DELETE FROM Predmeti WHERE Naziv='" + Naziv + "';";
+	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+}
+void Baza::PrikaziPredmeteSaOdredjeneGodine(int GKPP) {
+	string sql =
+		"SELECT * FROM Predmeti Where GodinaKojojPredmetPripada='" + to_string(GKPP) + "';";
+	sqlite3_exec(db, sql.c_str(),
+		[](void*, int kolone, char** podaci, char** nazivKolone) {
+			for (int i = 0; i < kolone; i++)
+				cout << nazivKolone[i] << ": " << podaci[i] << endl;
+			cout << "---" << endl;
+			return 0;
+
+		}, nullptr, nullptr);
+}

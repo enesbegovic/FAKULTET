@@ -12,4 +12,7 @@ public:
 	void KreirajStudenta(string PrezimeIme, string DatumRodjenja, string Index, int GKP);
 	void UkloniStudenta(string Index);
 	void PrikaziStudenteSaOdredjeneGodine(int GKP);
+	void KreirajPredmet(string Naziv, string PredmetniProfesor, int ECTS, int GKPP);
+	void UkloniPredmet(string Naziv);
+	void PrikaziPredmeteSaOdredjeneGodine(int GKPP);
 };
