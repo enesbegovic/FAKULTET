@@ -47,3 +47,52 @@ void Baza::KreirajTabelu() {
 		"Ocjena INTEGER);";
 	sqlite3_exec(db, KreirajIspite.c_str(), nullptr, nullptr, &errMsg);
 }
+void Baza::KreirajStudenta(string PrezimeIme, string DatumRodjenja, string Index, int GKP) {
+	char* errMsg = nullptr;
+	int count = 0;
+	string Provjera =
+		"SELECT COUNT(*) FROM Studenti WHERE Index='" + Index + "';";
+	sqlite3_exec(db, Provjera.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &count, nullptr);
+	if (count > 0) {
+		cout << "STUDENT VEC POSTOJI!!!" << endl;
+		return;
+	}
+	string sql =
+		"INSERT INTO Studenti(PrezimeIme,DatumRodjenja,Index,GodinaStudiranja) VALUES('"
+		+ PrezimeIme + "', '" + DatumRodjenja + "', '" + Index + "', '" + to_string(GKP) + "');";
+	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+}
+void Baza::UkloniStudenta(string Index) {
+	char* errMsg = nullptr;
+	int count = 0;
+	string Provjera =
+		"SELECT COUNT(*) FROM Studenti WHERE Index='" + Index + "';";
+	sqlite3_exec(db, Provjera.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &count, nullptr);
+	if (count == 0) {
+		cout << "NE POSTOJI TRAZENI STUDENT!!!" << endl;
+		return;
+	}
+	string sql =
+		"DELETE FROM Studenti WHERE Index='" + Index + "';";
+	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+}
+void Baza::PrikaziStudenteSaOdredjeneGodine(int GKP) {
+	string sql =
+		"SELECT * FROM Studenti Where GodinaStudija='" + to_string(GKP) + "';";
+	sqlite3_exec(db, sql.c_str(),
+		[](void*, int kolone, char** podaci, char** nazivKolone) {
+			for (int i = 0; i < kolone; i++)
+				cout << nazivKolone[i] << ": " << podaci[i] << endl;
+			cout << "---" << endl;
+			return 0;
+
+		}, nullptr, nullptr);
+}

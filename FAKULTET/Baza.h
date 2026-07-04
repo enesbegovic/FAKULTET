@@ -10,4 +10,6 @@ public:
 	~Baza();
 	void KreirajTabelu();
 	void KreirajStudenta(string PrezimeIme, string DatumRodjenja, string Index, int GKP);
+	void UkloniStudenta(string Index);
+	void PrikaziStudenteSaOdredjeneGodine(int GKP);
 };
