@@ -8,6 +8,7 @@ class Baza {
 public:
 	Baza();
 	~Baza();
+	void IzvrsiUpit(string sql, string PorukaGreske);
 	void KreirajTabelu();
 	void KreirajStudenta(string PrezimeIme, string DatumRodjenja, string Index, int GKP);
 	void UkloniStudenta(string Index);
@@ -16,7 +17,9 @@ public:
 	void UkloniPredmet(string Naziv);
 	void PrikaziPredmeteSaOdredjeneGodine(int GKPP);
 	void DodajPrijavu(string Student, string Predmet, string DatumPrijave);
+	void UkloniPrijavu(string Student, string Predmet);
 	void PrikaziPrijaveZaOdredjenuGodinu(int godina);
 	void KreirajIspit(string Student, string Predmet, string DatumPrijave, string DatumPolaganja, bool Polozio, int Ocjena);
+	void ObrisiIspit(string Student, string Predmet,string DatumPrijave);
 	void PrikaziIspiteZaOdredjenuGodinu(int godina);
 };

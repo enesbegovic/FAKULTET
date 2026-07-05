@@ -8,6 +8,14 @@ Baza::Baza() {
 Baza::~Baza() {
 	sqlite3_close(db);
 }
+void Baza::IzvrsiUpit(string sql, string PorukaGreske) {
+	char* errMsg = nullptr;
+	int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+	if (rc != SQLITE_OK) {
+		cout << PorukaGreske << ": " << errMsg << endl;
+		sqlite3_free(errMsg);
+	}
+}
 void Baza::KreirajTabelu() {
 	char* errMsg = nullptr;
 	string KreirajStudente =
@@ -15,7 +23,7 @@ void Baza::KreirajTabelu() {
 		"ID INTEGER PRIMARY KEY AUTOINCREMENT,"
 		"PrezimeIme TEXT NOT NULL,"
 		"DatumRodjenja TEXT NOT NULL,"
-		"Index TEXT NOT NULL,"
+		"[Index] TEXT NOT NULL,"
 		"GodinaStudija INTEGER NOT NULL);";
 	sqlite3_exec(db, KreirajStudente.c_str(), nullptr, nullptr, &errMsg);
 
@@ -32,7 +40,7 @@ void Baza::KreirajTabelu() {
 		"CREATE TABLE IF NOT EXISTS Prijave("
 		"ID INTEGER PRIMARY KEY AUTOINCREMENT,"
 		"StudentID INTEGER NOT NULL,"
-		"PredmetID,INTEGER NOT NULL,"
+		"PredmetID INTEGER NOT NULL,"
 		"DatumPrijave TEXT NOT NULL);";
 	sqlite3_exec(db, KreirajPrijave.c_str(), nullptr, nullptr, &errMsg);
 
@@ -48,10 +56,9 @@ void Baza::KreirajTabelu() {
 	sqlite3_exec(db, KreirajIspite.c_str(), nullptr, nullptr, &errMsg);
 }
 void Baza::KreirajStudenta(string PrezimeIme, string DatumRodjenja, string Index, int GKP) {
-	char* errMsg = nullptr;
 	int count = 0;
 	string Provjera =
-		"SELECT COUNT(*) FROM Studenti WHERE Index='" + Index + "';";
+		"SELECT COUNT(*) FROM Studenti WHERE [Index]='" + Index + "';";
 	sqlite3_exec(db, Provjera.c_str(),
 		[](void* data, int, char** podaci, char**) {
 			*(int*)data = atoi(podaci[0]);
@@ -62,15 +69,14 @@ void Baza::KreirajStudenta(string PrezimeIme, string DatumRodjenja, string Index
 		return;
 	}
 	string sql =
-		"INSERT INTO Studenti(PrezimeIme,DatumRodjenja,Index,GodinaStudiranja) VALUES('"
+		"INSERT INTO Studenti(PrezimeIme,DatumRodjenja,[Index],GodinaStudija) VALUES('"
 		+ PrezimeIme + "', '" + DatumRodjenja + "', '" + Index + "', '" + to_string(GKP) + "');";
-	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+	IzvrsiUpit(sql, "GRESKA PRI UNOSU STUDENATA");
 }
 void Baza::UkloniStudenta(string Index) {
-	char* errMsg = nullptr;
 	int count = 0;
 	string Provjera =
-		"SELECT COUNT(*) FROM Studenti WHERE Index='" + Index + "';";
+		"SELECT COUNT(*) FROM Studenti WHERE [Index]='" + Index + "';";
 	sqlite3_exec(db, Provjera.c_str(),
 		[](void* data, int, char** podaci, char**) {
 			*(int*)data = atoi(podaci[0]);
@@ -81,8 +87,8 @@ void Baza::UkloniStudenta(string Index) {
 		return;
 	}
 	string sql =
-		"DELETE FROM Studenti WHERE Index='" + Index + "';";
-	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+		"DELETE FROM Studenti WHERE [Index]='" + Index + "';";
+	IzvrsiUpit(sql, "GRESKA PRI BRISANJU STUDENTA");
 }
 void Baza::PrikaziStudenteSaOdredjeneGodine(int GKP) {
 	string sql =
@@ -97,7 +103,6 @@ void Baza::PrikaziStudenteSaOdredjeneGodine(int GKP) {
 		}, nullptr, nullptr);
 }
 void Baza::KreirajPredmet(string Naziv, string PredmetniProfesor, int ECTS, int GKPP) {
-	char* errMsg = nullptr;
 	int count = 0;
 	string Provjera =
 		"SELECT COUNT(*) FROM Predmeti WHERE Naziv='" + Naziv + "';";
@@ -111,12 +116,11 @@ void Baza::KreirajPredmet(string Naziv, string PredmetniProfesor, int ECTS, int 
 		return;
 	}
 	string sql =
-		"INSERT INTO Predmetiti(Naziv,PredmetiProfesor,ECTSBodovi,GodinaKojojPredmetPripada) VALUES('"
+		"INSERT INTO Predmeti(Naziv,PredmetniProfesor,ECTSBodovi,GodinaKojojPredmetPripada) VALUES('"
 		+ Naziv + "', '" + PredmetniProfesor + "', '" + to_string(ECTS) + "', '" + to_string(GKPP) + "');";
-	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+	IzvrsiUpit(sql,"GRESKA UNOSU PREDMETA");
 }
 void Baza::UkloniPredmet(string Naziv) {
-	char* errMsg = nullptr;
 	int count = 0;
 	string Provjera =
 		"SELECT COUNT(*) FROM Predmeti WHERE Naziv='" + Naziv + "';";
@@ -131,7 +135,7 @@ void Baza::UkloniPredmet(string Naziv) {
 	}
 	string sql =
 		"DELETE FROM Predmeti WHERE Naziv='" + Naziv + "';";
-	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+	IzvrsiUpit(sql,"GRESKA PRI BRISANJU PREDMETA");
 }
 void Baza::PrikaziPredmeteSaOdredjeneGodine(int GKPP) {
 	string sql =
@@ -146,10 +150,9 @@ void Baza::PrikaziPredmeteSaOdredjeneGodine(int GKPP) {
 		}, nullptr, nullptr);
 }
 void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave) {
-	char* errMsg = nullptr;
 	int StudentID = 0;
 	string ProvjeraStudenta =
-		"SELECT ID FROM Studenti WHERE Index='" + Student + "';";
+		"SELECT ID FROM Studenti WHERE [Index]='" + Student + "';";
 	sqlite3_exec(db, ProvjeraStudenta.c_str(),
 		[](void* data, int, char** podaci, char**) {
 			*(int*)data = atoi(podaci[0]);
@@ -170,11 +173,49 @@ void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave) {
 	string sql =
 		"INSERT INTO Prijave(StudentID,PredmetID,DatumPrijave) VALUES('"
 		+ to_string(StudentID) + "', '" + to_string(PredmetID) + "', '" + DatumPrijave + "');";
-	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+	IzvrsiUpit(sql,"GRESKA PRI UNOSU PRIJAVE");
+}
+void Baza::UkloniPrijavu(string Student, string Predmet) {
+	int StudentId=0;
+	string ProvjeraStudenta =
+		"SELECT ID FROM Studenti WHERE [Index]='" + Student + "';";
+	sqlite3_exec(db, ProvjeraStudenta.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &StudentId, nullptr);
+	int PredmetId = 0;
+	string ProvjeraPredmeta =
+		"SELECT ID FROM Predmeti WHERE Naziv='" + Predmet + "';";
+	sqlite3_exec(db, ProvjeraPredmeta.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &PredmetId, nullptr);
+	if (StudentId == 0 || PredmetId == 0) {
+		cout << "GRESKA PRI BRISANJU PRIJAVE!!!" << endl;
+		return;
+	}
+	int imaIspit = 0;
+	string Provjera =
+		"SELECT COUNT(*) FROM Ispiti WHERE DatumPrijaveID IN"
+		"(SELECT ID FROM Prijave WHERE StudentID=" + to_string(StudentId) + " AND PredmetID=" + to_string(PredmetId) + ");";
+	sqlite3_exec(db, Provjera.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &imaIspit, nullptr);
+	if (imaIspit > 0) {
+		cout << "GRESKA PRI BRISANJU PRIJAVE!!!" << endl;
+		return;
+	}
+	string sql =
+		"DELETE FROM Prijave WHERE StudentID=" + to_string(StudentId) + " AND PredmetID=" + to_string(PredmetId) + ";";
+	IzvrsiUpit(sql,"GRESKA PRI BRISANJU PRIJAVE");
 }
 void Baza::PrikaziPrijaveZaOdredjenuGodinu(int godina) {
 	string sql =
-		"SELECT Studenti.PrezimeIme, Studenti.Index, Studenti.GodinaStudija, Predmeti.Naziv, Predmeti.PredmetniProfesor, Predmeti.ECTSBodovi "
+		"SELECT Studenti.PrezimeIme, Studenti.[Index], Studenti.GodinaStudija, Predmeti.Naziv, Predmeti.PredmetniProfesor, Predmeti.ECTSBodovi, Prijave.DatumPrijave "
 		"FROM Prijave "
 		"JOIN Studenti ON Prijave.StudentID=Studenti.ID "
 		"JOIN Predmeti ON Prijave.PredmetID=Predmeti.ID "
@@ -188,10 +229,9 @@ void Baza::PrikaziPrijaveZaOdredjenuGodinu(int godina) {
 		}, nullptr, nullptr);
 }
 void Baza::KreirajIspit(string Student, string Predmet, string DatumPrijave, string DatumPolaganja, bool Polozio, int Ocjena) {
-	char* errMsg = nullptr;
 	int StudentId = 0;
 	string ProvjeraStudenta =
-		"SELECT ID FROM Studenti WHERE Index='" + Student + "';";
+		"SELECT ID FROM Studenti WHERE [Index]='" + Student + "';";
 	sqlite3_exec(db, ProvjeraStudenta.c_str(),
 		[](void* data, int, char** podaci, char**) {
 			*(int*)data = atoi(podaci[0]);
@@ -207,7 +247,7 @@ void Baza::KreirajIspit(string Student, string Predmet, string DatumPrijave, str
 		}, &PredmetId, nullptr);
 	int PrijaveId = 0;
 	string ProvjeraPrijave =
-		"SELECT ID FROM Prijave WHERE DatumPrijave='" + DatumPrijave + "';";
+		"SELECT ID FROM Prijave WHERE StudentID=" + to_string(StudentId) + " AND PredmetID=" + to_string(PredmetId) + " AND DatumPrijave='" + DatumPrijave +"';";
 	sqlite3_exec(db, ProvjeraPrijave.c_str(),
 		[](void* data, int, char** podaci, char**) {
 			*(int*)data = atoi(podaci[0]);
@@ -220,11 +260,46 @@ void Baza::KreirajIspit(string Student, string Predmet, string DatumPrijave, str
 	string sql =
 		"INSERT INTO Ispiti(StudentID,PredmetID,DatumPrijaveID,DatumPolaganja,Polozio,Ocjena) VALUES('"
 		+ to_string(StudentId) + "', '" + to_string(PredmetId) + "', '" + to_string(PrijaveId) + "', '" + DatumPolaganja + "', '" + to_string(Polozio)+ "', '" + to_string(Ocjena) + "');";
-	sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
+	IzvrsiUpit(sql,"GRESKA PRI UNOSU ISPITA");
+}
+void Baza::ObrisiIspit(string Student,string Predmet,string DatumPrijave){
+	int StudentId = 0;
+	string ProvjeraStudenta =
+		"SELECT ID FROM Studenti WHERE [Index]='" + Student + "';";
+	sqlite3_exec(db, ProvjeraStudenta.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &StudentId, nullptr);
+	int PredmetId = 0;
+	string ProvjeraPredmeta =
+		"SELECT ID FROM Predmeti WHERE Naziv='" + Predmet + "';";
+	sqlite3_exec(db, ProvjeraPredmeta.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &PredmetId, nullptr);
+	int PrijavaId = 0;
+	string ProvjeraPrijave =
+		"SELECT ID FROM Prijave WHERE StudentID=" + to_string(StudentId) + " AND PredmetID=" + to_string(PredmetId) + " AND DatumPrijave='" + DatumPrijave + "';";
+	sqlite3_exec(db, ProvjeraPrijave.c_str(),
+		[](void* data, int, char** podaci, char**) {
+			*(int*)data = atoi(podaci[0]);
+			return 0;
+		}, &PrijavaId, nullptr);
+	if (StudentId == 0 || PredmetId == 0 || PrijavaId == 0) {
+		cout << "GRESKA PRI BRISANJU ISPITA!!!" << endl;
+		return;
+	}
+	string sql =
+		"DELETE FROM Ispiti WHERE StudentID=" + to_string(StudentId) + " AND PredmetID=" + to_string(PredmetId) + " AND DatumPrijaveID=" + to_string(PrijavaId) + ";";
+	IzvrsiUpit(sql,"GRESKA PRI BRISANJU ISPITA");
 }
 void Baza::PrikaziIspiteZaOdredjenuGodinu(int godina) {
 	string sql =
-		"SELECT Studenti.PrezimeIme,Studenti.Index,Predmeti.Naziv,Predmeti.PredmetniProfesor,Predmeti.ECTSBodovi,Prijave.DatumPrijave "
+		"SELECT Studenti.PrezimeIme,Studenti.[Index],Predmeti.Naziv,Predmeti.PredmetniProfesor,Predmeti.ECTSBodovi,Prijave.DatumPrijave,Ispiti.DatumPolaganja, "
+		"CASE WHEN Ispiti.Polozio=1 THEN 'DA' ELSE 'NE' END AS Polozio, "
+		"CASE WHEN Ispiti.Polozio=1 THEN CAST(Ispiti.Ocjena AS TEXT) ELSE '---' END AS Ocjena "
 		"FROM Ispiti "
 		"JOIN Studenti ON Ispiti.StudentID=Studenti.ID "
 		"JOIN Predmeti ON Ispiti.PredmetID=Predmeti.ID "
