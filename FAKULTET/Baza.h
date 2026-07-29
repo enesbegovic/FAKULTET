@@ -16,10 +16,10 @@ public:
 	void KreirajPredmet(string Naziv, string PredmetniProfesor, int ECTS, int GKPP);
 	void UkloniPredmet(string Naziv);
 	void PrikaziPredmeteSaOdredjeneGodine(int GKPP);
-	void DodajPrijavu(string Student, string Predmet, string DatumPrijave);
+	void DodajPrijavu(string Student, string Predmet, string DatumPrijave, string DatumPolaganja);
 	void UkloniPrijavu(string Student, string Predmet);
 	void PrikaziPrijaveZaOdredjenuGodinu(int godina);
-	void KreirajIspit(string Student, string Predmet, string DatumPrijave, string DatumPolaganja, bool Polozio, int Ocjena);
-	void ObrisiIspit(string Student, string Predmet,string DatumPrijave);
-	void PrikaziIspiteZaOdredjenuGodinu(int godina);
+	void UnesiRezultateIspita(string Predmet,string DatumPolaganja);
+	void ObrisiIspit(string Predmet,string DatumPolaganja);
+	void PrikaziRezultateZaTrazenoPolaganje(string Predmet,string DatumPolaganja);
 };
