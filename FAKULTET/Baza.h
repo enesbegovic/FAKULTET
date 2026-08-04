@@ -19,6 +19,7 @@ public:
 	void UkloniPredmet(string Naziv);
 	void PrikaziPredmeteSaOdredjeneGodine(int GKPP);
 	void DodajPrijavu(string Student, string Predmet, string DatumPrijave, string DatumPolaganja);
+	int BrojPrijava();
 	void UkloniPrijavu(string Student, string Predmet);
 	void PrikaziPrijaveZaOdredjenuGodinu(int godina);
 	void UnesiRezultateIspita(string Predmet,string DatumPolaganja);

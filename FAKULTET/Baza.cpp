@@ -433,6 +433,22 @@ void Baza::PrikaziPrijaveZaOdredjenuGodinu(int godina) {
 	}
 	sqlite3_finalize(stmt);
 }
+int Baza::BrojPrijava() {
+	sqlite3_stmt* stmt;
+	string sql =
+		"SELECT COUNT (*) FROM Prijave;";
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+	if (rc != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI BROJANJA PRIJAVA:" << sqlite3_errmsg(db) << endl;
+		return -1;
+	}
+	int count = 0;
+	if (sqlite3_step(stmt) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt, 0);
+	}
+	sqlite3_finalize(stmt);
+	return count;
+}
 void Baza::UnesiRezultateIspita(string Predmet, string DatumPolaganja) {
 	sqlite3_stmt* stmtPrijava;
 	string sqlPrijava =
