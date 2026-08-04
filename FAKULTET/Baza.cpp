@@ -2,8 +2,8 @@
 #include <string>
 #include "Baza.h"
 using namespace std;
-Baza::Baza() {
-	sqlite3_open("Fakultet.db", &db);
+Baza::Baza(string PutanjaBaze) {
+	sqlite3_open(PutanjaBaze.c_str(), &db);
 	sqlite3_exec(db, "PRAGMA foreign_keys=ON;", nullptr, nullptr, nullptr);
 }
 Baza::~Baza() {
@@ -156,6 +156,22 @@ void Baza::PrikaziStudenteSaOdredjeneGodine(int GKP) {
 	}
 	sqlite3_finalize(stmt);
 }
+int Baza::BrojStudenata() {
+	sqlite3_stmt* stmt;
+	string sql =
+		"SELECT COUNT (*) FROM Studenti;";
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+	if (rc != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI BROJANJA STUDENATA:" << sqlite3_errmsg(db) << endl;
+		return -1;
+	}
+	int count = 0;
+	if (sqlite3_step(stmt) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt, 0);
+	}
+	sqlite3_finalize(stmt);
+	return count;
+}
 void Baza::KreirajPredmet(string Naziv, string PredmetniProfesor, int ECTS, int GKPP) {
 	sqlite3_stmt* stmtProvjera;
 	int count = 0;
@@ -256,6 +272,22 @@ void Baza::PrikaziPredmeteSaOdredjeneGodine(int GKPP) {
 		cout << "---" << endl;
 	}
 	sqlite3_finalize(stmt);
+}
+int Baza::BrojPredmeta() {
+	sqlite3_stmt* stmt;
+	string sql =
+		"SELECT COUNT (*) FROM Predmeti;";
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+	if (rc != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI BROJANJA PREDMETA:" << sqlite3_errmsg(db) << endl;
+		return -1;
+	}
+	int count = 0;
+	if (sqlite3_step(stmt) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt, 0);
+	}
+	sqlite3_finalize(stmt);
+	return count;
 }
 void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, string DatumPolaganja) {
 	sqlite3_stmt* stmtProvjerStudenta;

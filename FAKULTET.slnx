@@ -4,4 +4,5 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="FAKULTET/FAKULTET.vcxproj" Id="e7dc18bd-1dd8-4427-80d7-5b053848d432" />
+  <Project Path="FAKULTET_Testovi/FAKULTET_Testovi.vcxproj" Id="622e6561-dd37-4798-8910-3d2df6fb7cf4" />
 </Solution>
