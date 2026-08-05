@@ -107,3 +107,37 @@ TEST(BazaTest, UkloniPrijavuNepostojeciPredmet) {
 	testBaza.UkloniPrijavu("123456", "Abcdef");
 	EXPECT_EQ(testBaza.BrojPrijava(), 1);
 }
+TEST(BazaTest, UnesiOcjenuProvjeraBrojaIspita) {
+	Baza testBaza(":memory:");
+	testBaza.KreirajTabelu();
+	EXPECT_EQ(testBaza.BrojIspita(), 0);
+	testBaza.KreirajStudenta("Test Testic", "2000-01-01", "123456", 1);
+	testBaza.KreirajPredmet("Predmet1", "Profesor1", 6, 1);
+	int PrijavaID=testBaza.DodajPrijavu("123456", "Predmet1", "2026-01-22", "2026-01-30");
+	testBaza.UnesiOcjenu(PrijavaID, 8);
+	EXPECT_EQ(testBaza.BrojIspita(), 1);
+}
+TEST(BazaTest, ObrisiIspitProvjeraBrojaIspita) {
+	Baza testBaza(":memory:");
+	testBaza.KreirajTabelu();
+	EXPECT_EQ(testBaza.BrojIspita(), 0);
+	testBaza.KreirajStudenta("Test Testic", "2000-01-01", "123456", 1);
+	testBaza.KreirajPredmet("Predmet1", "Profesor1", 6, 1);
+	int PrijavaID = testBaza.DodajPrijavu("123456", "Predmet1", "2026-01-22", "2026-01-30");
+	testBaza.UnesiOcjenu(PrijavaID, 8);
+	EXPECT_EQ(testBaza.BrojIspita(), 1);
+	testBaza.ObrisiIspit("Predmet1", "2026-01-30");
+	EXPECT_EQ(testBaza.BrojIspita(), 0);
+}
+TEST(BazaTest, ObrisiNepostojeciIspitProvjeraBrojaIspita) {
+	Baza testBaza(":memory:");
+	testBaza.KreirajTabelu();
+	EXPECT_EQ(testBaza.BrojIspita(), 0);
+	testBaza.KreirajStudenta("Test Testic", "2000-01-01", "123456", 1);
+	testBaza.KreirajPredmet("Predmet1", "Profesor1", 6, 1);
+	int PrijavaID = testBaza.DodajPrijavu("123456", "Predmet1", "2026-01-22", "2026-01-30");
+	testBaza.UnesiOcjenu(PrijavaID, 8);
+	EXPECT_EQ(testBaza.BrojIspita(), 1);
+	testBaza.ObrisiIspit("Abcdef", "2026-01-30");
+	EXPECT_EQ(testBaza.BrojIspita(), 1);
+}

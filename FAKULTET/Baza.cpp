@@ -289,7 +289,7 @@ int Baza::BrojPredmeta() {
 	sqlite3_finalize(stmt);
 	return count;
 }
-void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, string DatumPolaganja) {
+int Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, string DatumPolaganja) {
 	sqlite3_stmt* stmtProvjerStudenta;
 	int StudentID = 0;
 	string ProvjeraStudenta =
@@ -297,7 +297,7 @@ void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, str
 	int rc = sqlite3_prepare_v2(db, ProvjeraStudenta.c_str(), -1, &stmtProvjerStudenta, nullptr);
 	if (rc != SQLITE_OK) {
 		cout << "GRESKA PRI PRIPREMI PROVJERE STUDENTA:" << sqlite3_errmsg(db) << endl;
-		return;
+		return 0;
 	}
 	sqlite3_bind_text(stmtProvjerStudenta, 1, Student.c_str(), -1, SQLITE_TRANSIENT);
 	if (sqlite3_step(stmtProvjerStudenta) == SQLITE_ROW) {
@@ -312,7 +312,7 @@ void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, str
 	int rc1 = sqlite3_prepare_v2(db, ProvjeraPredmeta.c_str(), -1, &stmtProvjeraPredmeta, nullptr);
 	if (rc1 != SQLITE_OK) {
 		cout << "GRESKA PRI PRIPREMI PROVJERE PREDMETA:" << sqlite3_errmsg(db) << endl;
-		return;
+		return 0;
 	}
 	sqlite3_bind_text(stmtProvjeraPredmeta, 1, Predmet.c_str(), -1, SQLITE_TRANSIENT);
 	if (sqlite3_step(stmtProvjeraPredmeta) == SQLITE_ROW) {
@@ -321,7 +321,7 @@ void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, str
 	sqlite3_finalize(stmtProvjeraPredmeta);
 	if (StudentID == 0 || PredmetID == 0) {
 		cout << "GRESKA PRI PRIJAVLJIVANJU ISPITA-NEPOSTOJECI STUDENT-NEPOSTOJECI PREDMET!!!" << endl;
-		return;
+		return 0;
 	}
 	sqlite3_stmt* stmt;
 	string sql =
@@ -329,7 +329,7 @@ void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, str
 	int rc2 = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
 	if (rc2 != SQLITE_OK) {
 		cout << "GRESKA PRI PRIPREMI DODAVANJA PRIJAVE:" << sqlite3_errmsg(db) << endl;
-		return;
+		return 0;
 	}
 	sqlite3_bind_int(stmt, 1, StudentID);
 	sqlite3_bind_int(stmt, 2, PredmetID);
@@ -339,9 +339,11 @@ void Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, str
 	sqlite3_finalize(stmt);
 	if (rc2 != SQLITE_DONE) {
 		cout << "GRESKA PRI DODAVANJU PRIJAVE:" << sqlite3_errmsg(db) << endl;
-		return;
+		return 0;
 	}
+	int PrijavaID = sqlite3_last_insert_rowid(db);
 	cout << "PRIJAVA USPIJESNO DODANA" << endl;
+	return PrijavaID;
 }
 void Baza::UkloniPrijavu(string Student, string Predmet) {
 	sqlite3_stmt* stmtProvjerStudenta;
@@ -449,6 +451,24 @@ int Baza::BrojPrijava() {
 	sqlite3_finalize(stmt);
 	return count;
 }
+void Baza::UnesiOcjenu(int PrijavaID, int Ocjena) {
+	sqlite3_stmt* stmt;
+	string sql =
+		"INSERT INTO Ispiti(PrijavaID, Ocjena) VALUES(?, ?);";
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+	if (rc != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI UNOSA OCJENA:" << sqlite3_errmsg(db) << endl;
+		return;
+	}
+	sqlite3_bind_int(stmt, 1, PrijavaID);
+	sqlite3_bind_int(stmt, 2, Ocjena);
+	rc = sqlite3_step(stmt);
+	sqlite3_finalize(stmt);
+	if (rc != SQLITE_DONE) {
+		cout << "GRESKA PRI UNOSU OCJENA:" << sqlite3_errmsg(db) << endl;
+		return;
+	}
+}
 void Baza::UnesiRezultateIspita(string Predmet, string DatumPolaganja) {
 	sqlite3_stmt* stmtPrijava;
 	string sqlPrijava =
@@ -466,14 +486,7 @@ void Baza::UnesiRezultateIspita(string Predmet, string DatumPolaganja) {
 	sqlite3_bind_text(stmtPrijava, 1, Predmet.c_str(),-1,SQLITE_TRANSIENT);
 	sqlite3_bind_text(stmtPrijava, 2, DatumPolaganja.c_str(),-1,SQLITE_TRANSIENT);
 
-	sqlite3_stmt* stmtInsert;
-	string sqlInsert =
-		"INSERT INTO Ispiti(PrijavaID, Ocjena) VALUES(?, ?);";
-	int rc1 = sqlite3_prepare_v2(db, sqlInsert.c_str(), -1, &stmtInsert, nullptr);
-	if (rc1 != SQLITE_OK) {
-		cout << "GRESKA PRI PRIPREMI KREIRANJA ISPITA:" << sqlite3_errmsg(db) << endl;
-		return;
-	}
+	
 	IzvrsiUpit("BEGIN TRANSACTION;", "GRESKA PRI POKRETANJU TRANSAKCIJE");
 	int brojStudenata = 0;
 	while (sqlite3_step(stmtPrijava) == SQLITE_ROW) {
@@ -491,14 +504,9 @@ void Baza::UnesiRezultateIspita(string Predmet, string DatumPolaganja) {
 			cout << "Unesite Ocjenu(5-10)" << endl;
 			cin >> Ocjena;
 		}
-		sqlite3_bind_int(stmtInsert, 1, PrijavaID);
-		sqlite3_bind_int(stmtInsert, 2, Ocjena);
-
-		sqlite3_step(stmtInsert);
-		sqlite3_reset(stmtInsert);
+		UnesiOcjenu(PrijavaID, Ocjena);
 	}
 	sqlite3_finalize(stmtPrijava);
-	sqlite3_finalize(stmtInsert);
 	IzvrsiUpit("COMMIT;", "GRESKA PRI COMMIT-u");
 	if (brojStudenata == 0) {
 		cout << "PREDMET NE POSTOJI ILI NEMA PRIJAVLJENIH STUDENATA" << endl;
@@ -562,4 +570,20 @@ void Baza::PrikaziRezultateZaTrazenoPolaganje(string Predmet,string DatumPolagan
 	if (brojRezultata == 0) {
 		cout << "ZA TRAZENI ISPIT NEMA REZULTATA" << endl;
 	}
+}
+int Baza::BrojIspita() {
+	sqlite3_stmt* stmt;
+	string sql =
+		"SELECT COUNT (*) FROM Ispiti;";
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
+	if (rc != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI BROJANJA ISPITA:" << sqlite3_errmsg(db) << endl;
+		return -1;
+	}
+	int count = 0;
+	if (sqlite3_step(stmt) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt, 0);
+	}
+	sqlite3_finalize(stmt);
+	return count;
 }
