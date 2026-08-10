@@ -1,5 +1,7 @@
 # FAKULTET
 
+![Build and Test](https://github.com/enesbegovic/FAKULTET/actions/workflows/build.yml/badge.svg)
+
 Konzolna C++ aplikacija za upravljanje studentima, predmetima, prijavama i ispitima, sa SQLite bazom podataka. Sav rad sa bazom ide preko prepared statements.
 
 ## Tehnologije
@@ -75,3 +77,13 @@ Konzolna C++ aplikacija za upravljanje studentima, predmetima, prijavama i ispit
 1. Otvoriti `FAKULTET.slnx` u Visual Studio-u
 2. Build (Debug/x64)
 3. Pokrenuti — baza (`Fakultet.db`) se automatski kreira pri prvom pokretanju ako ne postoji
+
+## Testiranje
+
+Projekat sadrži 15 jediničnih testova (Google Test) koji pokrivaju rad sa Studentima, Predmetima, Prijavama i Ispitima, uključujući unos i provjeru ocjena.
+
+Testovi se nalaze u `FAKULTET_Testovi` projektu i mogu se pokrenuti kroz Visual Studio Test Explorer (Test → Run All Tests).
+
+## CI/CD
+
+Svaki push na `master` granu automatski pokreće build i sve testove preko GitHub Actions (vidi `.github/workflows/build.yml`).
