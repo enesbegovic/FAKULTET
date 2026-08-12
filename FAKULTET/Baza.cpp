@@ -65,10 +65,10 @@ void Baza::KreirajStudenta(string PrezimeIme, string DatumRodjenja, string Index
 		cout << "GRESKA PRI PRIPREMI PROVJERE STUDENTA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmtProvjera(rawStmtProvjera);
-	sqlite3_bind_text(stmtProvjera, 1, Index.c_str(), -1, SQLITE_TRANSIENT);
-	if (sqlite3_step(stmtProvjera) == SQLITE_ROW) {
-		count = sqlite3_column_int(stmtProvjera, 0);
+	StmtPtr stmtProvjera(rawStmtProvjera);
+	sqlite3_bind_text(stmtProvjera.get(), 1, Index.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmtProvjera.get()) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmtProvjera.get(), 0);
 	}
 	if (count > 0) {
 		cout << "STUDENT VEC POSTOJI!!!" << endl;
@@ -82,12 +82,12 @@ void Baza::KreirajStudenta(string PrezimeIme, string DatumRodjenja, string Index
 		cout << "GRESKA PRI PRIPREMI DODAVANJA STUDENTA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_text(stmt, 1, PrezimeIme.c_str(), -1, SQLITE_TRANSIENT);
-	sqlite3_bind_text(stmt, 2, DatumRodjenja.c_str(), -1, SQLITE_TRANSIENT);
-	sqlite3_bind_text(stmt, 3, Index.c_str(), -1, SQLITE_TRANSIENT);
-	sqlite3_bind_int(stmt, 4, GKP);
-	rc1 = sqlite3_step(stmt);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_text(stmt.get(), 1, PrezimeIme.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt.get(), 2, DatumRodjenja.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt.get(), 3, Index.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_int(stmt.get(), 4, GKP);
+	rc1 = sqlite3_step(stmt.get());
 	if (rc1 != SQLITE_DONE) {
 		cout << "GRESKA PRI DODAVANJU STUDENTA:" << sqlite3_errmsg(db) << endl;
 		return;
@@ -104,10 +104,10 @@ void Baza::UkloniStudenta(string Index) {
 		cout << "GRESKA PRI PRIPREMI PROVJERE:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmtProvjera(rawStmtProvjera);
-	sqlite3_bind_text(stmtProvjera, 1, Index.c_str(), -1, SQLITE_TRANSIENT);
-	if (sqlite3_step(stmtProvjera) == SQLITE_ROW) {
-		count = sqlite3_column_int(stmtProvjera, 0);
+	StmtPtr stmtProvjera(rawStmtProvjera);
+	sqlite3_bind_text(stmtProvjera.get(), 1, Index.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmtProvjera.get()) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmtProvjera.get(), 0);
 	}
 	if (count == 0) {
 		cout << "NE POSTOJI TRAZENI STUDENT!!!" << endl;
@@ -121,9 +121,9 @@ void Baza::UkloniStudenta(string Index) {
 		cout << "GRESKA PRI PRIPREMI UKLANJANJA STUDENTA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_text(stmt, 1, Index.c_str(), -1, SQLITE_TRANSIENT);
-	rc1 = sqlite3_step(stmt);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_text(stmt.get(), 1, Index.c_str(), -1, SQLITE_TRANSIENT);
+	rc1 = sqlite3_step(stmt.get());
 	if (rc1 != SQLITE_DONE) {
 		cout << "GRESKA PRI UKLANJANJU STUDENTA:" << sqlite3_errmsg(db) << endl;
 		return;
@@ -139,14 +139,14 @@ void Baza::PrikaziStudenteSaOdredjeneGodine(int GKP) {
 		cout << "GRESKA PRI PRIPREMI PRIKAZA STUDENATA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_int(stmt, 1, GKP);
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		int ID = sqlite3_column_int(stmt, 0);
-		string Ime = (const char*)sqlite3_column_text(stmt, 1);
-		string Datum = (const char*)sqlite3_column_text(stmt, 2);
-		string Index = (const char*)sqlite3_column_text(stmt, 3);
-		int Godina = sqlite3_column_int(stmt, 4);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, GKP);
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		int ID = sqlite3_column_int(stmt.get(), 0);
+		string Ime = (const char*)sqlite3_column_text(stmt.get(), 1);
+		string Datum = (const char*)sqlite3_column_text(stmt.get(), 2);
+		string Index = (const char*)sqlite3_column_text(stmt.get(), 3);
+		int Godina = sqlite3_column_int(stmt.get(), 4);
 
 		cout << "ID:" << ID << endl;
 		cout << "Prezime I Ime Studenta:" << Ime << endl;
@@ -165,10 +165,10 @@ int Baza::BrojStudenata() {
 		cout << "GRESKA PRI PRIPREMI BROJANJA STUDENATA:" << sqlite3_errmsg(db) << endl;
 		return -1;
 	}
-	StmtGuard stmt(rawStmt);
+	StmtPtr stmt(rawStmt);
 	int count = 0;
-	if (sqlite3_step(stmt) == SQLITE_ROW) {
-		count = sqlite3_column_int(stmt, 0);
+	if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt.get(), 0);
 	}
 	return count;
 }
@@ -182,10 +182,10 @@ void Baza::KreirajPredmet(string Naziv, string PredmetniProfesor, int ECTS, int 
 		cout << "GRESKA PRI PRIPREMI PROVJERE:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmtProvjera(rawStmtProvjera);
-	sqlite3_bind_text(stmtProvjera, 1, Naziv.c_str(), -1, SQLITE_TRANSIENT);
-	if (sqlite3_step(stmtProvjera) == SQLITE_ROW) {
-		count = sqlite3_column_int(stmtProvjera, 0);
+	StmtPtr stmtProvjera(rawStmtProvjera);
+	sqlite3_bind_text(stmtProvjera.get(), 1, Naziv.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmtProvjera.get()) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmtProvjera.get(), 0);
 	}
 	if (count > 0) {
 		cout << "PREDMET VEC POSTOJI!!!" << endl;
@@ -199,12 +199,12 @@ void Baza::KreirajPredmet(string Naziv, string PredmetniProfesor, int ECTS, int 
 		cout << "GRESKA PRI PRIPREMI DODAVANJA PREDMETA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_text(stmt, 1, Naziv.c_str(), -1, SQLITE_TRANSIENT);
-	sqlite3_bind_text(stmt, 2, PredmetniProfesor.c_str(), -1, SQLITE_TRANSIENT);
-	sqlite3_bind_int(stmt, 3, ECTS);
-	sqlite3_bind_int(stmt, 4, GKPP);
-	rc1 = sqlite3_step(stmt);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_text(stmt.get(), 1, Naziv.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt.get(), 2, PredmetniProfesor.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_int(stmt.get(), 3, ECTS);
+	sqlite3_bind_int(stmt.get(), 4, GKPP);
+	rc1 = sqlite3_step(stmt.get());
 	if (rc1 != SQLITE_DONE) {
 		cout << "GRESKA PRI DODAVANJU PREDMETA:" << sqlite3_errmsg(db) << endl;
 		return;
@@ -221,10 +221,10 @@ void Baza::UkloniPredmet(string Naziv) {
 		cout << "GRESKA PRI PRIPREMI PROVJERE:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmtProvjera(rawStmtProvjera);
-	sqlite3_bind_text(stmtProvjera, 1, Naziv.c_str(), -1, SQLITE_TRANSIENT);
-	if (sqlite3_step(stmtProvjera) == SQLITE_ROW) {
-		count = sqlite3_column_int(stmtProvjera, 0);
+	StmtPtr stmtProvjera(rawStmtProvjera);
+	sqlite3_bind_text(stmtProvjera.get(), 1, Naziv.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmtProvjera.get()) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmtProvjera.get(), 0);
 	}
 	if (count == 0) {
 		cout << "NE POSTOJI TRAZENI PREDMET!!!" << endl;
@@ -238,9 +238,9 @@ void Baza::UkloniPredmet(string Naziv) {
 		cout << "GRESKA PRI PRIPREMI UKLANJANJA PREDMETA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_text(stmt, 1, Naziv.c_str(), -1, SQLITE_TRANSIENT);
-	rc1 = sqlite3_step(stmt);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_text(stmt.get(), 1, Naziv.c_str(), -1, SQLITE_TRANSIENT);
+	rc1 = sqlite3_step(stmt.get());
 	if (rc1 != SQLITE_DONE) {
 		cout << "GRESKA PRI UKLANJANU PREDMETA:" << sqlite3_errmsg(db) << endl;
 		return;
@@ -256,14 +256,14 @@ void Baza::PrikaziPredmeteSaOdredjeneGodine(int GKPP) {
 		cout << "GRESKA PRI PRIPREMI PRIKAZA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_int(stmt, 1, GKPP);
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		int ID = sqlite3_column_int(stmt, 0);
-		string Naziv = (const char*)sqlite3_column_text(stmt, 1);
-		string Profesor = (const char*)sqlite3_column_text(stmt, 2);
-		int ECTS = sqlite3_column_int(stmt, 3);
-		int GKPP = sqlite3_column_int(stmt, 4);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, GKPP);
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		int ID = sqlite3_column_int(stmt.get(), 0);
+		string Naziv = (const char*)sqlite3_column_text(stmt.get(), 1);
+		string Profesor = (const char*)sqlite3_column_text(stmt.get(), 2);
+		int ECTS = sqlite3_column_int(stmt.get(), 3);
+		int GKPP = sqlite3_column_int(stmt.get(), 4);
 
 		cout << "ID:" << ID << endl;
 		cout << "Naziv Predmeta:" << Naziv << endl;
@@ -282,10 +282,10 @@ int Baza::BrojPredmeta() {
 		cout << "GRESKA PRI PRIPREMI BROJANJA PREDMETA:" << sqlite3_errmsg(db) << endl;
 		return -1;
 	}
-	StmtGuard stmt(rawStmt);
+	StmtPtr stmt(rawStmt);
 	int count = 0;
-	if (sqlite3_step(stmt) == SQLITE_ROW) {
-		count = sqlite3_column_int(stmt, 0);
+	if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt.get(), 0);
 	}
 	return count;
 }
@@ -299,10 +299,10 @@ int Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, stri
 		cout << "GRESKA PRI PRIPREMI PROVJERE STUDENTA:" << sqlite3_errmsg(db) << endl;
 		return 0;
 	}
-	StmtGuard stmtProvjerStudenta(rawStmtProvjerStudenta);
-	sqlite3_bind_text(stmtProvjerStudenta, 1, Student.c_str(), -1, SQLITE_TRANSIENT);
-	if (sqlite3_step(stmtProvjerStudenta) == SQLITE_ROW) {
-		StudentID = sqlite3_column_int(stmtProvjerStudenta, 0);
+	StmtPtr stmtProvjerStudenta(rawStmtProvjerStudenta);
+	sqlite3_bind_text(stmtProvjerStudenta.get(), 1, Student.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmtProvjerStudenta.get()) == SQLITE_ROW) {
+		StudentID = sqlite3_column_int(stmtProvjerStudenta.get(), 0);
 	}
 	
 
@@ -315,10 +315,10 @@ int Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, stri
 		cout << "GRESKA PRI PRIPREMI PROVJERE PREDMETA:" << sqlite3_errmsg(db) << endl;
 		return 0;
 	}
-	StmtGuard stmtProvjeraPredmeta(rawStmtProvjeraPredmeta);
-	sqlite3_bind_text(stmtProvjeraPredmeta, 1, Predmet.c_str(), -1, SQLITE_TRANSIENT);
-	if (sqlite3_step(stmtProvjeraPredmeta) == SQLITE_ROW) {
-		PredmetID = sqlite3_column_int(stmtProvjeraPredmeta, 0);
+	StmtPtr stmtProvjeraPredmeta(rawStmtProvjeraPredmeta);
+	sqlite3_bind_text(stmtProvjeraPredmeta.get(), 1, Predmet.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmtProvjeraPredmeta.get()) == SQLITE_ROW) {
+		PredmetID = sqlite3_column_int(stmtProvjeraPredmeta.get(), 0);
 	}
 	
 	if (StudentID == 0 || PredmetID == 0) {
@@ -333,12 +333,12 @@ int Baza::DodajPrijavu(string Student, string Predmet, string DatumPrijave, stri
 		cout << "GRESKA PRI PRIPREMI DODAVANJA PRIJAVE:" << sqlite3_errmsg(db) << endl;
 		return 0;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_int(stmt, 1, StudentID);
-	sqlite3_bind_int(stmt, 2, PredmetID);
-	sqlite3_bind_text(stmt, 3, DatumPrijave.c_str(), -1, SQLITE_TRANSIENT);
-	sqlite3_bind_text(stmt, 4, DatumPolaganja.c_str(), -1, SQLITE_TRANSIENT);
-	rc2 = sqlite3_step(stmt);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, StudentID);
+	sqlite3_bind_int(stmt.get(), 2, PredmetID);
+	sqlite3_bind_text(stmt.get(), 3, DatumPrijave.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt.get(), 4, DatumPolaganja.c_str(), -1, SQLITE_TRANSIENT);
+	rc2 = sqlite3_step(stmt.get());
 	if (rc2 != SQLITE_DONE) {
 		cout << "GRESKA PRI DODAVANJU PRIJAVE:" << sqlite3_errmsg(db) << endl;
 		return 0;
@@ -357,10 +357,10 @@ void Baza::UkloniPrijavu(string Student, string Predmet) {
 		cout << "GRESKA PRI PRIPREMI PROVJERE STUDENTA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmtProvjerStudenta(rawStmtProvjerStudenta);
-	sqlite3_bind_text(stmtProvjerStudenta, 1, Student.c_str(), -1, SQLITE_TRANSIENT);
-	if (sqlite3_step(stmtProvjerStudenta) == SQLITE_ROW) {
-		StudentID = sqlite3_column_int(stmtProvjerStudenta, 0);
+	StmtPtr stmtProvjerStudenta(rawStmtProvjerStudenta);
+	sqlite3_bind_text(stmtProvjerStudenta.get(), 1, Student.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmtProvjerStudenta.get()) == SQLITE_ROW) {
+		StudentID = sqlite3_column_int(stmtProvjerStudenta.get(), 0);
 	}
 	
 
@@ -373,10 +373,10 @@ void Baza::UkloniPrijavu(string Student, string Predmet) {
 		cout << "GRESKA PRI PRIPREMI PROVJERE PREDMETA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmtProvjeraPredmeta(rawStmtProvjeraPredmeta);
-	sqlite3_bind_text(stmtProvjeraPredmeta, 1, Predmet.c_str(), -1, SQLITE_TRANSIENT);
-	if (sqlite3_step(stmtProvjeraPredmeta) == SQLITE_ROW) {
-		PredmetID = sqlite3_column_int(stmtProvjeraPredmeta, 0);
+	StmtPtr stmtProvjeraPredmeta(rawStmtProvjeraPredmeta);
+	sqlite3_bind_text(stmtProvjeraPredmeta.get(), 1, Predmet.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmtProvjeraPredmeta.get()) == SQLITE_ROW) {
+		PredmetID = sqlite3_column_int(stmtProvjeraPredmeta.get(), 0);
 	}
 	
 	if (StudentID == 0 || PredmetID == 0) {
@@ -391,10 +391,10 @@ void Baza::UkloniPrijavu(string Student, string Predmet) {
 		cout << "GRESKA PRI PRIPREMI BRISANJA PRIJAVE:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_int(stmt, 1, StudentID);
-	sqlite3_bind_int(stmt, 2, PredmetID);
-	rc2 = sqlite3_step(stmt);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, StudentID);
+	sqlite3_bind_int(stmt.get(), 2, PredmetID);
+	rc2 = sqlite3_step(stmt.get());
 	if (rc2 != SQLITE_DONE) {
 		cout << "GRESKA PRI BRISANJU PRIJAVE:" << sqlite3_errmsg(db) << endl;
 		return;
@@ -414,18 +414,18 @@ void Baza::PrikaziPrijaveZaOdredjenuGodinu(int godina) {
 		cout << "GRESKA PRI PRIPREMI PRIKAZA PRIJAVA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_int(stmt, 1, godina);
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
-		int ID = sqlite3_column_int(stmt, 0);
-		string Ime = (const char*)sqlite3_column_text(stmt, 1);
-		string Index = (const char*)sqlite3_column_text(stmt, 2);
-		int Godina = sqlite3_column_int(stmt, 3);
-		string Naziv = (const char*)sqlite3_column_text(stmt, 4);
-		string Profesor = (const char*)sqlite3_column_text(stmt, 5);
-		int ECTS = sqlite3_column_int(stmt, 6);
-		string DatumPrijave = (const char*)sqlite3_column_text(stmt, 7);
-		string DatumPolaganja = (const char*)sqlite3_column_text(stmt, 8);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, godina);
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		int ID = sqlite3_column_int(stmt.get(), 0);
+		string Ime = (const char*)sqlite3_column_text(stmt.get(), 1);
+		string Index = (const char*)sqlite3_column_text(stmt.get(), 2);
+		int Godina = sqlite3_column_int(stmt.get(), 3);
+		string Naziv = (const char*)sqlite3_column_text(stmt.get(), 4);
+		string Profesor = (const char*)sqlite3_column_text(stmt.get(), 5);
+		int ECTS = sqlite3_column_int(stmt.get(), 6);
+		string DatumPrijave = (const char*)sqlite3_column_text(stmt.get(), 7);
+		string DatumPolaganja = (const char*)sqlite3_column_text(stmt.get(), 8);
 
 		cout << "Broj Prijave:" << ID << endl;
 		cout << "Student:" << Ime << endl;
@@ -449,10 +449,10 @@ int Baza::BrojPrijava() {
 		cout << "GRESKA PRI PRIPREMI BROJANJA PRIJAVA:" << sqlite3_errmsg(db) << endl;
 		return -1;
 	}
-	StmtGuard stmt(rawStmt);
+	StmtPtr stmt(rawStmt);
 	int count = 0;
-	if (sqlite3_step(stmt) == SQLITE_ROW) {
-		count = sqlite3_column_int(stmt, 0);
+	if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt.get(), 0);
 	}
 
 	return count;
@@ -466,10 +466,10 @@ void Baza::UnesiOcjenu(int PrijavaID, int Ocjena) {
 		cout << "GRESKA PRI PRIPREMI UNOSA OCJENA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_int(stmt, 1, PrijavaID);
-	sqlite3_bind_int(stmt, 2, Ocjena);
-	rc = sqlite3_step(stmt);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, PrijavaID);
+	sqlite3_bind_int(stmt.get(), 2, Ocjena);
+	rc = sqlite3_step(stmt.get());
 	if (rc != SQLITE_DONE) {
 		cout << "GRESKA PRI UNOSU OCJENA:" << sqlite3_errmsg(db) << endl;
 		return;
@@ -489,18 +489,18 @@ void Baza::UnesiRezultateIspita(string Predmet, string DatumPolaganja) {
 		cout << "GRESKA PRI PRIPREMI:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmtPrijava(rawStmtPrijava);
-	sqlite3_bind_text(stmtPrijava, 1, Predmet.c_str(),-1,SQLITE_TRANSIENT);
-	sqlite3_bind_text(stmtPrijava, 2, DatumPolaganja.c_str(),-1,SQLITE_TRANSIENT);
+	StmtPtr stmtPrijava(rawStmtPrijava);
+	sqlite3_bind_text(stmtPrijava.get(), 1, Predmet.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmtPrijava.get(), 2, DatumPolaganja.c_str(), -1, SQLITE_TRANSIENT);
 
 	
 	IzvrsiUpit("BEGIN TRANSACTION;", "GRESKA PRI POKRETANJU TRANSAKCIJE");
 	int brojStudenata = 0;
-	while (sqlite3_step(stmtPrijava) == SQLITE_ROW) {
+	while (sqlite3_step(stmtPrijava.get()) == SQLITE_ROW) {
 		brojStudenata++;
 
-		int PrijavaID = sqlite3_column_int(stmtPrijava, 0);
-		string Ime = (const char*)sqlite3_column_text(stmtPrijava, 1);
+		int PrijavaID = sqlite3_column_int(stmtPrijava.get(), 0);
+		string Ime = (const char*)sqlite3_column_text(stmtPrijava.get(), 1);
 
 		cout << "Student:" << Ime << endl;
 		string Odgovor;
@@ -535,10 +535,10 @@ void Baza::ObrisiIspit(string Predmet,string DatumPolaganja){
 		cout << "GRESKA PRI PRIPREMI BRISANJA REZULTATA ISPITA:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_text(stmt, 1, Predmet.c_str(), -1, SQLITE_TRANSIENT);
-	sqlite3_bind_text(stmt, 2, DatumPolaganja.c_str(), -1, SQLITE_TRANSIENT);
-	rc = sqlite3_step(stmt);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_text(stmt.get(), 1, Predmet.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt.get(), 2, DatumPolaganja.c_str(), -1, SQLITE_TRANSIENT);
+	rc = sqlite3_step(stmt.get());
 	
 	if (rc != SQLITE_DONE) {
 		cout << "GRESKA PRI BRISANJU REZULTATA ISPITA:" << sqlite3_errmsg(db) << endl;
@@ -560,16 +560,16 @@ void Baza::PrikaziRezultateZaTrazenoPolaganje(string Predmet,string DatumPolagan
 		cout << "GRESKA PRI PRIPREMI PRIKAZA REZULTATA ISPITA ZA ODREDJENU GODINU:" << sqlite3_errmsg(db) << endl;
 		return;
 	}
-	StmtGuard stmt(rawStmt);
-	sqlite3_bind_text(stmt, 1, Predmet.c_str(),-1,SQLITE_TRANSIENT);
-	sqlite3_bind_text(stmt, 2, DatumPolaganja.c_str(),-1, SQLITE_TRANSIENT);
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_text(stmt.get(), 1, Predmet.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt.get(), 2, DatumPolaganja.c_str(), -1, SQLITE_TRANSIENT);
 	int brojRezultata = 0;
 	cout << "REZULTATI TRAZENOG ISPITA:" << endl;
-	while (sqlite3_step(stmt) == SQLITE_ROW) {
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
 		brojRezultata++;
-		string Ime = (const char*)sqlite3_column_text(stmt, 0);
-		string Index = (const char*)sqlite3_column_text(stmt, 1);
-		int Ocjena = sqlite3_column_int(stmt, 2);
+		string Ime = (const char*)sqlite3_column_text(stmt.get(), 0);
+		string Index = (const char*)sqlite3_column_text(stmt.get(), 1);
+		int Ocjena = sqlite3_column_int(stmt.get(), 2);
 
 		cout << "Student:" << Ime << "(" << Index << ") - " << Ocjena << endl;
 
@@ -587,10 +587,10 @@ int Baza::BrojIspita() {
 		cout << "GRESKA PRI PRIPREMI BROJANJA ISPITA:" << sqlite3_errmsg(db) << endl;
 		return -1;
 	}
-	StmtGuard stmt(rawStmt);
+	StmtPtr stmt(rawStmt);
 	int count = 0;
-	if (sqlite3_step(stmt) == SQLITE_ROW) {
-		count = sqlite3_column_int(stmt, 0);
+	if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt.get(), 0);
 	}
 	return count;
 }
