@@ -594,3 +594,80 @@ int Baza::BrojIspita() {
 	}
 	return count;
 }
+vector<Student>Baza::UzmiSveStudenteSaOdredjeneGodine(int godina) {
+	vector<Student>rezultat;
+	sqlite3_stmt* rawStmt;
+	string sql =
+		"SELECT * FROM Studenti WHERE GodinaStudija=?;";
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &rawStmt, nullptr);
+	if (rc != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI UZIMANJA STUDENATA:" << sqlite3_errmsg(db) << endl;
+		return rezultat;
+	}
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, godina);
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		Student s;
+		s.ID = sqlite3_column_int(stmt.get(), 0);
+		s.ImePrezime = (const char*)sqlite3_column_text(stmt.get(), 1);
+		s.DatumRodjenja = (const char*)sqlite3_column_text(stmt.get(), 2);
+		s.BrojIndexa = (const char*)sqlite3_column_text(stmt.get(), 3);
+		s.Godina = sqlite3_column_int(stmt.get(), 4);
+		rezultat.push_back(s);
+	}
+	return rezultat;
+}
+vector<Predmet>Baza::UzmiSvePredmeteSaOdredjeneGodine(int godina) {
+	vector<Predmet>rezultat;
+	sqlite3_stmt* rawStmt;
+	string sql =
+		"SELECT * FROM Predmeti WHERE GodinaKojojPredmetPripada=?;";
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &rawStmt, nullptr);
+	if (rc != SQLITE_OK) {
+		cout <<  "GRESKA PRI PRIPREMI UZIMANJA PREDMETA:" << sqlite3_errmsg(db) << endl;
+		return rezultat;
+	}
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, godina);
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		Predmet p;
+		p.ID = sqlite3_column_int(stmt.get(), 0);
+		p.Naziv = (const char*)sqlite3_column_text(stmt.get(), 1);
+		p.Profesor = (const char*)sqlite3_column_text(stmt.get(), 2);
+		p.ECTS = sqlite3_column_int(stmt.get(), 3);
+		p.Godina = sqlite3_column_int(stmt.get(), 4);
+		rezultat.push_back(p);
+	}
+	return rezultat;
+}
+vector<Prijava>Baza::UzmiSvePrijaveZaOdredjenuGodinu(int godina) {
+	vector<Prijava>rezultat;
+	sqlite3_stmt* rawStmt;
+	string sql =
+		"SELECT Prijave.ID, Studenti.PrezimeIme, Studenti.[Index], Studenti.GodinaStudija, Predmeti.Naziv, Predmeti.PredmetniProfesor, Predmeti.ECTSBodovi, Prijave.DatumPrijave, Prijave.DatumPolaganja "
+		"FROM Prijave "
+		"JOIN Studenti ON Prijave.StudentID=Studenti.ID "
+		"JOIN Predmeti ON Prijave.PredmetID=Predmeti.ID "
+		"WHERE Studenti.GodinaStudija=?;";
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &rawStmt, nullptr);
+	if (rc != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI UZIMANJA PRIJAVA:" << sqlite3_errmsg(db) << endl;
+		return rezultat;
+	}
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, godina);
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		Prijava p;
+		p.ID = sqlite3_column_int(stmt.get(), 0);
+		p.ImePrezimeStudenta = (const char*)sqlite3_column_text(stmt.get(), 1);
+		p.BrojIndexa = (const char*)sqlite3_column_text(stmt.get(), 2);
+		p.Godina = sqlite3_column_int(stmt.get(), 3);
+		p.NazivPredmeta = (const char*)sqlite3_column_text(stmt.get(), 4);
+		p.ImePrezimeProfesora = (const char*)sqlite3_column_text(stmt.get(), 5);
+		p.ECTS = sqlite3_column_int(stmt.get(), 6);
+		p.DatumPrijave = (const char*)sqlite3_column_text(stmt.get(), 7);
+		p.DatumPolaganja = (const char*)sqlite3_column_text(stmt.get(), 8);
+		rezultat.push_back(p);
+	}
+	return rezultat;
+}
