@@ -671,3 +671,40 @@ vector<Prijava>Baza::UzmiSvePrijaveZaOdredjenuGodinu(int godina) {
 	}
 	return rezultat;
 }
+vector<Ispit>Baza::UzmiSveIspite() {
+	vector<Ispit>rezultat;
+	sqlite3_stmt* rawStmt;
+	string sql =
+		"SELECT Ispiti.ID, Studenti.PrezimeIme, Studenti.[Index], Predmeti.Naziv, Prijave.DatumPolaganja, Ispiti.Ocjena "
+		"FROM Ispiti "
+		"JOIN Prijave ON Ispiti.PrijavaID=Prijave.ID "
+		"JOIN Studenti ON Prijave.StudentID=Studenti.ID "
+		"JOIN Predmeti ON Prijave.PredmetID=Predmeti.ID;";
+	int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &rawStmt, nullptr);
+	if (rc != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI UZIMANJA ISPITA:" << sqlite3_errmsg(db) << endl;
+		return rezultat;
+	}
+	StmtPtr stmt(rawStmt);
+	while (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		Ispit i;
+		i.ID = sqlite3_column_int(stmt.get(), 0);
+		i.ImePrezime = (const char*)sqlite3_column_text(stmt.get(), 1);
+		i.BrIndexa = (const char*)sqlite3_column_text(stmt.get(), 2);
+		i.Predmet = (const char*)sqlite3_column_text(stmt.get(), 3);
+		i.DatumPolaganja = (const char*)sqlite3_column_text(stmt.get(), 4);
+		i.Ocjena = sqlite3_column_int(stmt.get(), 5);
+		rezultat.push_back(i);
+	}
+	return rezultat;
+}
+void Baza::UnesiRezultateIspita1(vector<pair<int, int>>Rezultati) {
+	IzvrsiUpit("BEGIN TRANSACTION;", "GRESKA PRI POKRETANJU TRANSAKCIJE");
+	for (const auto& x : Rezultati) {
+		int PrijavaID = x.first;
+		int Ocjena = x.second;
+		UnesiOcjenu(PrijavaID, Ocjena);
+	}
+	IzvrsiUpit("COMMIT;", "GRESKA PRI COMMIT-u");
+	cout << "USPIJESNO UNESENI REZULTATI ISPITA" << endl;
+}

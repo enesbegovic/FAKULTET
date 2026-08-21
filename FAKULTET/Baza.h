@@ -30,6 +30,14 @@ struct Prijava {
 	string DatumPrijave;
 	string DatumPolaganja;
 };
+struct Ispit {
+	int ID;
+	string ImePrezime;
+	string BrIndexa;
+	string Predmet;
+	string DatumPolaganja;
+	int Ocjena;
+};
 class Baza {
 	sqlite3* db;
 public:
@@ -53,8 +61,10 @@ public:
 	void PrikaziPrijaveZaOdredjenuGodinu(int godina);
 	vector<Prijava>UzmiSvePrijaveZaOdredjenuGodinu(int godina);
 	void UnesiOcjenu(int PrijavaID, int Ocjena);
+	void UnesiRezultateIspita1(vector<pair<int, int>>Rezultati);
 	void UnesiRezultateIspita(string Predmet,string DatumPolaganja);
 	void ObrisiIspit(string Predmet,string DatumPolaganja);
 	void PrikaziRezultateZaTrazenoPolaganje(string Predmet,string DatumPolaganja);
+	vector<Ispit>UzmiSveIspite();
 	int BrojIspita();
 };

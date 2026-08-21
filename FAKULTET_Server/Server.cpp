@@ -475,6 +475,60 @@ int main() {
 			res.set_content(Greska.dump(4), "application/json");
 		}
 		});
+	server.Get("/Ispiti", [&baza](const httplib::Request& req, httplib::Response& res) {
+		std::vector<Ispit>ispiti = baza.UzmiSveIspite();
+		json rezultat = json::array();
+		for (const auto& i : ispiti) {
+			json ji;
+			ji["ID"] = i.ID;
+			ji["Ime i Prezime Studenta"] = i.ImePrezime;
+			ji["Broj Indexa"] = i.BrIndexa;
+			ji["Naziv Predmeta"] = i.Predmet;
+			ji["Datum Polaganja"] = i.DatumPolaganja;
+			ji["Ocjena"] = i.Ocjena;
+			rezultat.push_back(ji);
+		}
+		res.set_content(rezultat.dump(4), "application/json");
+		});
+	server.Post("/Ispiti", [&baza](const httplib::Request& req, httplib::Response& res) {
+		try {
+			json tijelo = json::parse(req.body);
+			vector<pair<int, int>>rezultati;
+			for (const auto& x : tijelo.at("rezultati")) {
+				int PrijavaID = x.at("prijava");
+				int Ocjena = x.at("ocjena");
+				rezultati.push_back({ PrijavaID,Ocjena });
+			}
+			baza.UnesiRezultateIspita1(rezultati);
+			json Poruka;
+			Poruka["Poruka"] = "Rezultati su uspijesno uneseni";
+			res.status = 201;
+			res.set_content(Poruka.dump(4), "application/json");
+		}
+		catch (const std::exception& e) {
+			json Greska;
+			Greska["Greska"] = e.what();
+			res.status = 400;
+			res.set_content(Greska.dump(4), "application/json");
+		}
+		});
+	server.Delete("/Ispiti/:predmet/:datumpolaganja", [&baza](const httplib::Request& req, httplib::Response& res) {
+		try {
+			string Predmet = req.path_params.at("predmet");
+			string DatumPolaganja = req.path_params.at("datumpolaganja");
+			baza.ObrisiIspit(Predmet, DatumPolaganja);
+			json Poruka;
+			Poruka["Poruka"] = "Uspijeno uklonjeni rezultati ispita";
+			res.status = 200;
+			res.set_content(Poruka.dump(4), "application/json");
+		}
+		catch (const std::exception& e) {
+			json Greska;
+			Greska["Greska"] = e.what();
+			res.status = 400;
+			res.set_content(Greska.dump(4), "application/json");
+		}
+		});
 	std::cout << "Server pokrenut na http://localhost:8080" << std::endl;
 	server.listen("localhost", 8080);
 	return 0;
