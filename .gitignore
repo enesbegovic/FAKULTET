@@ -364,3 +364,4 @@ FodyWeavers.xsd
 *.db
 vcpkg_installed/
 *.pem
+*.db
