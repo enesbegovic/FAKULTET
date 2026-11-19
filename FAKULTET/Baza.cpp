@@ -61,7 +61,8 @@ void Baza::KreirajTabelu() {
 		"ID INTEGER PRIMARY KEY AUTOINCREMENT,"
 		"UserName TEXT NOT NULL UNIQUE,"
 		"PassWordHash TEXT NOT NULL,"
-		"Uloga TEXT NOT NULL DEFAULT 'korisnik');";
+		"Uloga TEXT NOT NULL DEFAULT 'korisnik',"
+		"StudentID INTEGER UNIQUE REFERENCES Studenti(ID));";
 	IzvrsiUpit(KreirajKorisnika, "GRESKA PRI KREIRANJU TABELE KORISNICI");
 }
 void Baza::KreirajStudenta(string PrezimeIme, string DatumRodjenja, string Index, int GKP) {
@@ -797,4 +798,92 @@ int Baza::BrojAdmina(string admin) {
 		Broj = sqlite3_column_int(stmt.get(), 0);
 	}
 	return Broj;
+}
+bool Baza::PoveziStudentaSaRacunom(string username, string brIndexa) {
+	sqlite3_stmt* rawStmt;
+	int StudentID = 0;
+	string sql =
+		"SELECT ID FROM Studenti WHERE [Index]=?;";
+	if (sqlite3_prepare_v2(db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI UZMIANJA ID-a STUDENTA:" << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_text(stmt.get(), 1, brIndexa.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		StudentID = sqlite3_column_int(stmt.get(), 0);
+	}
+	if (StudentID == 0) {
+		cout << "GRESKA PRI POVEZIVANJU STUDENTA SA RACUNOM,TRAZENI STUDENT NE POSTOJI:" << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+	sqlite3_stmt* rawStmt1;
+	string sql1 =
+		"UPDATE Korisnici SET StudentID=? WHERE UserName=?;";
+	if (sqlite3_prepare_v2(db, sql1.c_str(), -1, &rawStmt1, nullptr) != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI AZURIRANJU KORISNIKA:" << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+	StmtPtr stmt1(rawStmt1);
+	sqlite3_bind_int(stmt1.get(), 1, StudentID);
+	sqlite3_bind_text(stmt1.get(), 2, username.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmt1.get()) != SQLITE_DONE) {
+		cout << "GRESKA PRI AZURIRANJU KORISNIKA:" << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+	cout << "KORISNIK USPIJESNO AZURIRAN" << endl;
+	return true;
+}
+int Baza::UzmiStudentID(string username) {
+	sqlite3_stmt* rawStmt;
+	int StudentID = -1;
+	string sql =
+		"SELECT StudentID FROM Korisnici WHERE UserName=?;";
+	if (sqlite3_prepare_v2(db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI UZIMANJA STUDENTID-a:" << sqlite3_errmsg(db) << endl;
+		return -1;
+	}
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_text(stmt.get(), 1, username.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		if (sqlite3_column_type(stmt.get(), 0) != SQLITE_NULL) {
+			StudentID = sqlite3_column_int(stmt.get(), 0);
+		}
+	}
+	return StudentID;
+}
+int Baza::StudentPostoji(string brIndexa) {
+	sqlite3_stmt* rawStmt;
+	int ID = -1;
+	string sql =
+		"SELECT ID FROM Studenti WHERE [Index]=?;";
+	if (sqlite3_prepare_v2(db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI UZIMANJA ID-a STUDENTA:" << sqlite3_errmsg(db) << endl;
+		return -1;
+	}
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_text(stmt.get(), 1, brIndexa.c_str(), -1, SQLITE_TRANSIENT);
+	if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		ID = sqlite3_column_int(stmt.get(), 0);
+	}
+	return ID;
+}
+bool Baza::StudentImaRacun(int StudentID) {
+	sqlite3_stmt* rawStmt;
+	int count = 0;
+	string sql =
+		"SELECT COUNT (*) FROM Korisnici WHERE StudentID=?;";
+	if (sqlite3_prepare_v2(db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
+		cout << "GRESKA PRI PRIPREMI BROJANJA KORISNIKA:" << sqlite3_errmsg(db) << endl;
+		return false;
+	}
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, StudentID);
+	if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		count = sqlite3_column_int(stmt.get(), 0);
+	}
+	if (count > 0) {
+		return true;
+	}
+	return false;
 }
