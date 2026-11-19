@@ -69,6 +69,7 @@ public:
 	int BrojIspita();
 	void DodajKorisnika(string UserName, string PassWordHash);
 	string UzmiHash(string UserName);
-	void PostaviUlogu(string UserName, string Uloga);
+	bool PostaviUlogu(string UserName, string Uloga);
 	string UzmiUlogu(string UserName);
+	int BrojAdmina(string admin);
 };
