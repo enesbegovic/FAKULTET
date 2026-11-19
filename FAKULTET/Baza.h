@@ -72,4 +72,8 @@ public:
 	bool PostaviUlogu(string UserName, string Uloga);
 	string UzmiUlogu(string UserName);
 	int BrojAdmina(string admin);
+	bool PoveziStudentaSaRacunom(string username, string brIndexa);
+	int UzmiStudentID(string username);
+	int StudentPostoji(string brIndexa);
+	bool StudentImaRacun(int StudentID);
 };

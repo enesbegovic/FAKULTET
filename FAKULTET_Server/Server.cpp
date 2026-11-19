@@ -130,6 +130,40 @@ int main() {
 		res.status = 200;
 		res.set_content("{\"Poruka\":\"Uloga uspijesno azurirana\"}", "application/json");
 		});
+	server.Put("/korisnici/:username/student", [&baza, &ulogeMutex](const httplib::Request& req, httplib::Response& res) {
+		json tijelo = json::parse(req.body, nullptr, false);
+		if (tijelo.is_discarded() || !tijelo.is_object() || !tijelo.contains("brojIndexa") || !tijelo["brojIndexa"].is_string()) {
+			res.status = 400;
+			res.set_content("{\"Greska\":\"Neispravno tijelo\"}", "application/json");
+			return;
+		}
+		string Meta = req.path_params.at("username");
+		string brIndexa = tijelo["brojIndexa"];
+		std::lock_guard<mutex>lockUloge(ulogeMutex);
+		if (baza.UzmiUlogu(Meta).empty()) {
+			res.status = 404;
+			res.set_content("{\"Greska\":\"Korisnik ne postoji\"}", "application/json");
+			return;
+		}
+		int StudentID = baza.StudentPostoji(brIndexa);
+		if (StudentID == -1) {
+			res.status = 404;
+			res.set_content("{\"Greska\":\"Student ne postoji\"}", "application/json");
+			return;
+		}
+		if (baza.StudentImaRacun(StudentID)) {
+			res.status = 409;
+			res.set_content("{\"Greska\":\"Student vec ima racun\"}", "application/json");
+			return;
+			}
+		if (!baza.PoveziStudentaSaRacunom(Meta, brIndexa)) {
+			res.status = 500;
+			res.set_content("{\"Greska\":\"Povezivanje studenta s racunom nije uspijelo\"}", "application/json");
+			return;
+		}
+		res.status = 200;
+		res.set_content("{\"Poruka\":\"Uspijesno povezivanje studenta i racuna\"}", "application/json");
+		});
 	server.Get("/", [](const httplib::Request& req, httplib::Response& res) {
 		res.set_content("Server radi!!!", "text/plain");
 		});
