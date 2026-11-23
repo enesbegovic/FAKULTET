@@ -887,3 +887,19 @@ bool Baza::StudentImaRacun(int StudentID) {
 	}
 	return false;
 }
+string Baza::UzmiIndexStudenta(int StudentID) {
+	sqlite3_stmt* rawStmt;
+	string Index = "";
+	string sql =
+		"SELECT [Index] FROM Studenti WHERE ID=?;";
+	if (sqlite3_prepare_v2(db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
+		cout << "GRESKA PRI UZIMANJU INDEX-a STUDENTA:" << sqlite3_errmsg(db) << endl;
+		return Index;
+	}
+	StmtPtr stmt(rawStmt);
+	sqlite3_bind_int(stmt.get(), 1, StudentID);
+	if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
+		Index = (const char*)sqlite3_column_text(stmt.get(), 0);
+	}
+	return Index;
+}

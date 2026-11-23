@@ -76,4 +76,5 @@ public:
 	int UzmiStudentID(string username);
 	int StudentPostoji(string brIndexa);
 	bool StudentImaRacun(int StudentID);
+	string UzmiIndexStudenta(int StudentID);
 };
