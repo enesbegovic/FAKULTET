@@ -17,6 +17,20 @@ struct Pokusaji {
 	int brojPokusaja = 0;
 	std::chrono::steady_clock::time_point BlokadaDo{};
 };
+std::pair<string, string>PozivalacIzTokena(const httplib::Request& req, std::map<string, Sesija>& sesije, std::mutex& sesijeMutex) {
+	string auth = req.get_header_value("Authorization");
+	string Prefiks = "Bearer ";
+	if (auth.rfind(Prefiks, 0) != 0) {
+		return { "","" };
+	}
+	string token = auth.substr(Prefiks.size());
+	std::lock_guard<mutex>lock(sesijeMutex);
+	auto it = sesije.find(token);
+	if (it == sesije.end()) {
+		return { "","" };
+	}
+	return { it->second.UserName,it->second.Uloga };
+}
 int main() {
 	if (sodium_init() < 0) {
 		std::cout << "Libsodium nije inicijaliziran" << std::endl;
@@ -44,8 +58,9 @@ int main() {
 			std::lock_guard<mutex>lock(sesijeMutex);
 			auto it = sesije.find(token);
 			if (it != sesije.end() && it->second.Vrijeme > std::chrono::steady_clock::now()) {
+				bool PrijavaStudenta = (req.method == "POST" && (req.path == "/PrijaveZaPrvuGodinu" || req.path == "/PrijaveZaDruguGodinu" || req.path == "/PrijaveZaTrecuGodinu"));
 				bool Mijenja = (req.method == "POST" || req.method == "PUT" || req.method == "DELETE")
-					&&req.path != "/logout";
+					&&req.path != "/logout"&&!PrijavaStudenta;
 				if (Mijenja && it->second.Uloga != "admin") {
 					res.status = 403;
 					res.set_content("{\"Greska\":\"Nemate dozvolu za ovu akciju\"}", "application/json");
@@ -620,18 +635,29 @@ int main() {
 		}
 		res.set_content(rezultat.dump(4), "application/json");
 		});
-	server.Post("/PrijaveZaPrvuGodinu", [&baza](const httplib::Request& req, httplib::Response& res) {
+	server.Post("/PrijaveZaPrvuGodinu", [&baza,&sesije,&sesijeMutex](const httplib::Request& req, httplib::Response& res) {
 		try {
+			auto [username, uloga] = PozivalacIzTokena(req, sesije, sesijeMutex);
 			json tijelo = json::parse(req.body);
-			string Index = tijelo.at("index");
+			string Index;
+			if (uloga == "admin") {
+				Index = tijelo.at("index");
+			}
+			else {
+				int StudentID = baza.UzmiStudentID(username);
+				if (StudentID == -1) {
+					res.status = 403;
+					res.set_content("{\"Greska\":\"Racun nije povezan sa studentom\"}", "application/json");
+					return;
+				}
+				Index = baza.UzmiIndexStudenta(StudentID);
+			}
 			string Predmet = tijelo.at("predmet");
 			string DatumPrijave = tijelo.at("prijava");
 			string DatumIspita = tijelo.at("ispit");
 			baza.DodajPrijavu(Index, Predmet, DatumPrijave, DatumIspita);
-			json Poruka;
-			Poruka["Poruka"] = "Prijava je uspijesno dodana";
 			res.status = 201;
-			res.set_content(Poruka.dump(4), "application/json");
+			res.set_content("{\"Poruka\":\"Prijava uspijeno dodana\"}","application/json");
 		}
 		catch (const std::exception& e) {
 			json Greska;
@@ -657,18 +683,30 @@ int main() {
 			res.set_content(Greska.dump(4), "application/json");
 		}
 		});
-	server.Post("/PrijaveZaDruguGodinu", [&baza](const httplib::Request& req, httplib::Response& res) {
+	server.Post("/PrijaveZaDruguGodinu", [&baza,&sesije,&sesijeMutex](const httplib::Request& req, httplib::Response& res) {
 		try {
+			auto [username, uloga] = PozivalacIzTokena(req, sesije, sesijeMutex);
 			json tijelo = json::parse(req.body);
-			string Index = tijelo.at("index");
+			string Index;
+			if (uloga == "admin") {
+				Index = tijelo.at("index");
+			}
+			else {
+				int StudentID = baza.UzmiStudentID(username);
+				if (StudentID == -1) {
+					res.status = 403;
+					res.set_content("{\"Greska\":\"Racun nije povezan sa studentom\"}", "application/json");
+					return;
+				}
+				Index = baza.UzmiIndexStudenta(StudentID);
+			}
 			string Predmet = tijelo.at("predmet");
 			string DatumPrijave = tijelo.at("prijava");
 			string DatumIspita = tijelo.at("ispit");
 			baza.DodajPrijavu(Index, Predmet, DatumPrijave, DatumIspita);
 			json Poruka;
-			Poruka["Poruka"] = "Prijava je uspijesno dodana";
 			res.status = 201;
-			res.set_content(Poruka.dump(4), "application/json");
+			res.set_content("{\"Poruka\":\"Prijava uspijesno dodana\"}","application/json");
 		}
 		catch (const std::exception& e) {
 			json Greska;
@@ -694,18 +732,29 @@ int main() {
 			res.set_content(Greska.dump(4), "application/json");
 		}
 		});
-	server.Post("/PrijaveZaTrecuGodinu", [&baza](const httplib::Request& req, httplib::Response& res) {
+	server.Post("/PrijaveZaTrecuGodinu", [&baza,&sesije,&sesijeMutex](const httplib::Request& req, httplib::Response& res) {
 		try {
+			auto [username, uloga] = PozivalacIzTokena(req, sesije, sesijeMutex);
 			json tijelo = json::parse(req.body);
-			string Index = tijelo.at("index");
+			string Index;
+			if (uloga == "admin") {
+				 Index = tijelo.at("index");
+			}
+			else {
+				int StudentID = baza.UzmiStudentID(username);
+				if (StudentID == -1) {
+					res.status = 403;
+					res.set_content("{\"Greska\":\"Racun nije povezan sa studentom\"}", "application/json");
+					return;
+				}
+				Index = baza.UzmiIndexStudenta(StudentID);
+			}
 			string Predmet = tijelo.at("predmet");
 			string DatumPrijave = tijelo.at("prijava");
 			string DatumIspita = tijelo.at("ispit");
 			baza.DodajPrijavu(Index, Predmet, DatumPrijave, DatumIspita);
-			json Poruka;
-			Poruka["Poruka"] = "Prijava je uspijesno dodana";
 			res.status = 201;
-			res.set_content(Poruka.dump(4), "application/json");
+			res.set_content("{\"Poruka\":\"Prijava uspijesno dodana\"}","application/json");
 		}
 		catch (const std::exception& e) {
 			json Greska;
